@@ -56,9 +56,9 @@ knn = Pipeline([
     ('mms', MinMaxScaler()),
     ('skb', SelectKBest(score_func= chi2, k = 10)),
     ('knn', KNeighborsClassifier(
-        n_neighbors = 5,
+        n_neighbors = 3,
         p = 2,
-        weights = 'uniform',))
+        weights = 'uniform'))
     ])
 
 cv_list_knn_baseline = cross_val_score(
@@ -89,3 +89,122 @@ std_cv_knn_euclid = np.std(cv_list_knn_euclid) #Desvio Padrao
 
 #Imprime a performance do treino com KNN Euclidianas
 print(f"Performance (bac): {round(mean_cv_knn_euclid, 4)} +- {round(std_cv_knn_euclid, 4)}")
+
+#Realiza o treinamento com KNN com distancias manhattan
+knn = Pipeline([
+    ('mms', MinMaxScaler()),
+    ('skb', SelectKBest(score_func= chi2, k = 10)),
+    ('knn', KNeighborsClassifier(
+        n_neighbors = 3,
+        p = 1,
+        weights = 'uniform'))
+    ])
+
+cv_list_knn_manhattan = cross_val_score(
+    knn,
+    X_train,
+    y_train,
+    cv = 10,
+    scoring = 'balanced_accuracy'
+    )
+
+mean_cv_knn_manhattan = np.mean(cv_list_knn_manhattan) #Media
+std_cv_knn_manhattan = np.std(cv_list_knn_manhattan) #Desvio Padrao
+
+#Imprime a performance do treino com KNN Manhattan
+print(f"Performance (bac): {round(mean_cv_knn_manhattan, 4)} +- {round(std_cv_knn_manhattan, 4)}")
+
+#Realiza o treinamento com Logistic Regression L2
+lr = Pipeline([
+    ('scaler', StandardScaler()),
+    ('lr', LogisticRegression(
+        penalty = "l2", #penalidade para evitar overfit
+        C = 1, #fator de regularizacao do modelo
+        fit_intercept = True, #se o intercepto deve ser estimado
+        class_weight = "balanced", #pesos para as classes, pois o dataset eh desbalanceado
+        random_state = 42))
+    ])
+
+cv_list_lr_l2 = cross_val_score(
+    lr,
+    X_train,
+    y_train,
+    cv = 10,
+    scoring = 'balanced_accuracy'
+    )
+
+mean_cv_lr_l2 = np.mean(cv_list_lr_l2) #Media
+std_cv_lr_l2 = np.std(cv_list_lr_l2) #Desvio Padrao
+
+#Imprime a performance do treino com Logistic Regression L2
+print(f"Performance (bac): {round(mean_cv_lr_l2, 4)} +- {round(std_cv_lr_l2, 4)}")
+
+#Realiza o treinamento com Logistic Regression L1
+lr = Pipeline([
+    ('scaler', StandardScaler()),
+    ('lr', LogisticRegression(
+        penalty = "l1", #penalidade para evitar overfit
+        C = 1, #fator de regularizacao do modelo
+        fit_intercept = True, #se o intercepto deve ser estimado
+        class_weight = "balanced", #pesos para as classes, pois o dataset eh desbalanceado
+        solver = "liblinear",
+        random_state = 42))
+    ])
+
+cv_list_lr_l1 = cross_val_score(
+    lr,
+    X_train,
+    y_train,
+    cv = 10,
+    scoring = 'balanced_accuracy'
+    )
+
+mean_cv_lr_l1 = np.mean(cv_list_lr_l1) #Media
+std_cv_lr_l1 = np.std(cv_list_lr_l1) #Desvio Padrao
+
+#Imprime a performance do treino com Logistic Regression L2
+print(f"Performance (bac): {round(mean_cv_lr_l1, 4)} +- {round(std_cv_lr_l1, 4)}")
+
+
+lr = Pipeline([
+    ('scaler', StandardScaler()),
+    ('pca', PCA(n_components = 10)),
+    ('lr', LogisticRegression(
+        penalty = "l2", #penalidade para evitar overfit
+        C = 1, #fator de regularizacao do modelo
+        fit_intercept = True, #se o intercepto deve ser estimado
+        class_weight = "balanced", #pesos para as classes, pois o dataset eh desbalanceado
+        solver = "liblinear", #algoritmo de otimizacao usado no treinamento do modelo
+        random_state = 42))
+])
+
+cv_list_lr_pca = cross_val_score(
+    lr,
+    X_train,
+    y_train,
+    cv = 10,
+    scoring = 'balanced_accuracy'
+    )
+
+mean_cv_lr_pca = np.mean(cv_list_lr_pca) #Media
+std_cv_lr_pca = np.std(cv_list_lr_pca) #Desvio Padrao
+
+#Imprime a performance do treino com Logistic Regression L2
+print(f"Performance (bac): {round(mean_cv_lr_pca, 4)} +- {round(std_cv_lr_pca, 4)}")
+
+#resultados da cross validation
+df_result_cv = pd.DataFrame(
+    [cv_list_knn_baseline, cv_list_knn_euclid, cv_list_knn_manhattan, cv_list_lr_l2, cv_list_lr_l1, cv_list_lr_pca],
+    index = ['Baseline', 'Knn Euclid', 'Knn Manhattan', 'Logistic Regression L2', 'Logistic Regression L1', 'Logistic Regression PCA'],
+).T
+
+df_res = df_result_cv.stack().to_frame("balanced_accuracy")
+df_res.index.rename(["fold", "pipelines"], inplace = True) 
+df_res = df_res.reset_index()
+df_res.head(12)
+
+plt.figure(figsize = (10, 10))
+ax = sns.boxplot(x = "pipelines", y = "balanced_accuracy", data = df_res)
+ax = sns.swarmplot(x = "pipelines", y = "balanced_accuracy", data = df_res, color = ".40")
+
+#plt.show()
