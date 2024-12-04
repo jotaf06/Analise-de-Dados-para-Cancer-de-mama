@@ -28,11 +28,13 @@ df.describe() #Resumo estatistico dos dados
 x = df.drop('class', axis = 1)
 y = df['class']
 
+#Divide os dados em treino e teste
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size = 0.30, stratify = y, random_state = 42)
 
 y_train.value_counts(normalize = True)
 y_test.value_counts(normalize = True)
 
+#Realiza o treinamento com Logistic Regression
 lrc = LogisticRegression(random_state = 42)
 
 cv_list_lr_baseline = cross_val_score(
@@ -46,8 +48,10 @@ cv_list_lr_baseline = cross_val_score(
 mean_cv_lr_baseline = np.mean(cv_list_lr_baseline) #Media
 std_cv_lr_baseline = np.std(cv_list_lr_baseline) #Desvio Padrao
 
+#Imprime a performance do treino com Logistic Regression
 print(f"Performance (bac): {round(mean_cv_lr_baseline, 4)} +- {round(std_cv_lr_baseline, 4)}")
 
+#Realiza o treinamento com KNN
 knn = Pipeline([
     ('mms', MinMaxScaler()),
     ('skb', SelectKBest(score_func= chi2, k = 10)),
@@ -68,9 +72,10 @@ cv_list_knn_baseline = cross_val_score(
 mean_cv_knn_baseline = np.mean(cv_list_knn_baseline) #Media
 std_cv_knn_baseline = np.std(cv_list_knn_baseline) #Desvio Padrao
 
+#Imprime a performance do treino com KNN
 print(f"Performance (bac): {round(mean_cv_knn_baseline, 4)} +- {round(std_cv_knn_baseline, 4)}")
 
-
+#Realiza o treinamento com KNN com distancias euclidianas
 cv_list_knn_euclid = cross_val_score(
     knn,
     X_train,
@@ -82,4 +87,5 @@ cv_list_knn_euclid = cross_val_score(
 mean_cv_knn_euclid = np.mean(cv_list_knn_euclid) #Media
 std_cv_knn_euclid = np.std(cv_list_knn_euclid) #Desvio Padrao
 
+#Imprime a performance do treino com KNN Euclidianas
 print(f"Performance (bac): {round(mean_cv_knn_euclid, 4)} +- {round(std_cv_knn_euclid, 4)}")
